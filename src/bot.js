@@ -7,8 +7,10 @@ var request = require('request');
 const {
     Client,
     Intents,
-    Guild
+    Guild,
+    MessageEmbed,
 } = require('discord.js'); //need to use intent since nodejs update
+const e = require('express');
 const client = new Client({
     intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]
 });
@@ -35,7 +37,8 @@ client.on("message",  (message) => {
     if (message.author.bot) {
         return true;
     }
-    steamStatus();
+
+    steamStatus(message);
     if (message.content.startsWith(PREFIX)) {
         const [msg_cmd, ...args] = message.content
             .trim()
@@ -69,97 +72,52 @@ client.on("message",  (message) => {
 
     }
 })
-function steamStatus(){
-    const steamUral ='https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid='
-    let steamData =''
-    request(steamUral, function(err, res, body) {
-		if(!err && res.statusCode < 400) {
-            steamData+=body
-		}
-	});	
+async function steamStatus(message){
     const dotaUrl ='https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=730'
-    let bodyDota =""
-	request(dotaUrl, function(err, res, body) {
+    let dotaData =""
+	await request(dotaUrl, function(err, res, body) {
 		if(!err && res.statusCode < 400) {
-		bodyDota+=body
+		 dotaData += body
 		}
 	});	
+    
     const csgoUrl = 'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=730'
     let csgoData = '';
-    request(csgoUrl, function(err, res, body) {
+    await request(csgoUrl, function(err, res, body) {
 		if(!err && res.statusCode < 400) {
 		csgoData+=body;
 		}
 	});	
-    console.log(csgoData);
-//     https.get("https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=", res => {
-//     res.setEncoding("utf8");
-//     let bodyAll = "";
-//     res.on("data", dataAll => {
-//       bodyAll += dataAll;
-//     });
-//     res.on("end", () => {
-//       bodyAll = JSON.parse(bodyAll);
+    const tf2Url = 'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=440'
+    let  tfdata ='';
+    await request(tf2Url,function(err,res,body){
+        if(!err&&res.statusCode<400){
+        tfdata +=body;
+        }
+     res.on('end',()=>{tfdata =JSON.parse(tfdata)})
+    })
+    const gtaUrl = 'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=271590'
+    let gtaData ='';
+    request(gtaUrl,function(err,res,body){
 
-//       https.get("https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=570", res => {
-//         res.setEncoding("utf8");
-//         let bodyDota = "";
-//         res.on("data", dataDota => {
-//           bodyDota += dataDota;
-//         });
-//         res.on("end", () => {
-//           bodyDota = JSON.parse(bodyDota);
-
-//           https.get("https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=730", res => {
-//             res.setEncoding("utf8");
-//             let bodyCSGO = "";
-//             res.on("data", dataCSGO => {
-//               bodyCSGO += dataCSGO;
-//             });
-//             res.on("end", () => {
-//               bodyCSGO = JSON.parse(bodyCSGO);
-
-//               https.get("https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=440", res => {
-//                 res.setEncoding("utf8");
-//                 let bodyTF = "";
-//                 res.on("data", dataTF => {
-//                   bodyTF += dataTF;
-//                 });
-//                 res.on("end", () => {
-//                   bodyTF = JSON.parse(bodyTF);
-
-//                   https.get("https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=271590", res => {
-//                     res.setEncoding("utf8");
-//                     let bodyGTA = "";
-//                     res.on("data", dataGTA => {
-//                       bodyGTA += dataGTA;
-//                     });
-//                     res.on("end", () => {
-//                       bodyGTA = JSON.parse(bodyGTA);
-
-//                       https.get("https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=578080", res => {
-//                         res.setEncoding("utf8");
-//                         let bodyPUBG = "";
-//                         res.on("data", dataPUBG => {
-//                           bodyPUBG += dataPUBG;
-//                         });
-//                         res.on("end", () => {
-//                           bodyPUBG = JSON.parse(bodyPUBG);
-
-//                           console.log(bodyAll);
-//                         });
-//                       });
-//                     });
-//                   });
-//                 });
-//               });
-//             });
-//           });
-//         });
-//       });
-//     });
-//   });
+        if(!err&&res.statusCode<400){
+            gtaData +=body;
+            }
+    })
+    const exampleEmbed =  new MessageEmbed()
+	.setColor('#0099ff')
+	.setTitle('Showing concurrent player numbers for some games')
+	.setDescription('the game')
+	.setThumbnail('https://i.imgur.com/FNviTdG.jpeg')
+	.addFields(
+		{ name: 'tf2 ', value: gtaData },
+	)
+	.addField('Inline field title', 'Some value here', true)
+	.setImage('https://i.imgur.com/AfFp7pu.png')
+	.setTimestamp()
+    message.channel.send({ embeds: [exampleEmbed] });
 }
+
 function rndnum(lower, upper) {
     return (Math.floor(Math.random() * (upper - lower + 1)) + lower).toString();
 }
