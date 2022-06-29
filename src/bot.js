@@ -3,6 +3,7 @@ require('dotenv').config({
 }) //.env file 
 const appid = require("appid");
 const express = require('express');
+const axios = require("axios")
 var request = require('request');
 const {
     Client,
@@ -96,25 +97,20 @@ async function steamStatus(message){
         }
      res.on('end',()=>{tfdata =JSON.parse(tfdata)})
     })
-    const gtaUrl = 'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=271590'
-    let gtaData ='';
-    request(gtaUrl,function(err,res,body){
-
-        if(!err&&res.statusCode<400){
-            gtaData +=body;
-            }
-    })
-    const exampleEmbed =  new MessageEmbed()
-	.setColor('#0099ff')
-	.setTitle('Showing concurrent player numbers for some games')
-	.setDescription('the game')
-	.setThumbnail('https://i.imgur.com/FNviTdG.jpeg')
-	.addFields(
-		{ name: 'tf2 ', value: gtaData },
-	)
-	.addField('Inline field title', 'Some value here', true)
-	.setImage('https://i.imgur.com/AfFp7pu.png')
-	.setTimestamp()
+    const gtaUrl =
+    "https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=271590";
+  
+const response = await axios.get(gtaUrl);
+gtaData = JSON.stringify(response.data);
+const exampleEmbed = new MessageEmbed()
+    .setColor("#0099ff")
+    .setTitle("Showing concurrent player numbers for some games")
+    .setDescription("the game")
+    .setThumbnail("https://i.imgur.com/FNviTdG.jpeg")
+    .addFields({ name: "Grand Theft Auto V", value: gtaData.})
+    .addField("Inline field title", "Some value here", true)
+    .setImage("https://i.imgur.com/AfFp7pu.png")
+    .setTimestamp();
     message.channel.send({ embeds: [exampleEmbed] });
 }
 
