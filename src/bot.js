@@ -109,7 +109,7 @@ const exampleEmbed = new MessageEmbed()
     .setThumbnail("https://i.imgur.com/FNviTdG.jpeg")
     .addFields({ name: "Grand Theft Auto V", value: gtaData.})
     .addField("Inline field title", "Some value here", true)
-    .setImage("https://i.imgur.com/AfFp7pu.png")
+    .setImage("https://i.im
     .setTimestamp();
     message.channel.send({ embeds: [exampleEmbed] });
 }
