@@ -12,6 +12,7 @@ const {
     MessageEmbed,
 } = require('discord.js'); //need to use intent since nodejs update
 const e = require('express');
+const { json } = require('express');
 const client = new Client({
     intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]
 });
@@ -32,14 +33,11 @@ client.on('disconnect', function (erMsg, code) {
 //steam api 
 
 
-
 //commands
 client.on("message",  (message) => {
     if (message.author.bot) {
         return true;
     }
-
-    steamStatus(message);
     if (message.content.startsWith(PREFIX)) {
         const [msg_cmd, ...args] = message.content
             .trim()
@@ -66,50 +64,62 @@ client.on("message",  (message) => {
                 message.channel.bulkDelete(amount);
                 message.channel.send(amount + ' ' + 'messages deleted');
                 break;
-            case 'charts':
-                
+            case 'charts': 
+                 steamStatus(message);
+                break;
+            case 'current':
+                specificGame(message);
+
         }
 
 
     }
 })
-async function steamStatus(message){
-    const dotaUrl ='https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=730'
-    let dotaData =""
-	await request(dotaUrl, function(err, res, body) {
-		if(!err && res.statusCode < 400) {
-		 dotaData += body
-		}
-	});	
+async function specificGame(message){
+    const steamUrl = "http://api.steampowered.com/ISteamApps/GetAppList/v0002/"
+    const [msg_cmd, ...args] = message.content
+    .trim()
+    .substring(PREFIX.length)
+    .split(/\s+/);  
+    let data = await axios.get(steamUrl);
+    data = JSON.stringify(data);
+    let gameName 
+    let gameid
+    if(args[0].isNaN){
+        gameid = data.applist.apps.filter(a => a.appid === args[0])[0]
+    }
+    console.log(gameid)
     
-    const csgoUrl = 'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=730'
-    let csgoData = '';
-    await request(csgoUrl, function(err, res, body) {
-		if(!err && res.statusCode < 400) {
-		csgoData+=body;
-		}
-	});	
-    const tf2Url = 'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=440'
-    let  tfdata ='';
-    await request(tf2Url,function(err,res,body){
-        if(!err&&res.statusCode<400){
-        tfdata +=body;
-        }
-     res.on('end',()=>{tfdata =JSON.parse(tfdata)})
-    })
-    const gtaUrl =
-    "https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=271590";
-  
+    
+}
+async function steamStatus(message){
+const dotaUrl ='https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=570'
+const dotaResponse = await axios.get(dotaUrl);
+dotaData = JSON.stringify(dotaResponse.data.response.player_count.toLocaleString('en-US'));
+    
+const csgoUrl = 'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=730'
+const csResponse = await axios.get(csgoUrl);
+csgoData = JSON.stringify(csResponse.data.response.player_count.toLocaleString('en-US'));
+
+const tf2Url = 'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=440'
+const tfResonse = await axios.get(tf2Url);
+tf2Data = JSON.stringify(tfResonse.data.response.player_count.toLocaleString('en-US'));
+
+const gtaUrl ="https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=271590";
 const response = await axios.get(gtaUrl);
-gtaData = JSON.stringify(response.data);
+
+
+gtaData = JSON.stringify(response.data.response.player_count.toLocaleString('en-US'));
+
 const exampleEmbed = new MessageEmbed()
-    .setColor("#0099ff")
-    .setTitle("Showing concurrent player numbers for some games")
-    .setDescription("the game")
-    .setThumbnail("https://i.imgur.com/FNviTdG.jpeg")
-    .addFields({ name: "Grand Theft Auto V", value: gtaData.})
-    .addField("Inline field title", "Some value here", true)
-    .setImage("https://i.im
+    .setColor("#black")
+    .setTitle("Showing cuncurrent:")
+    .setThumbnail("https://imgur.com/GdZOG8J.jpeg")
+    .addFields(
+            {name: "Grand Theft Auto V", value: gtaData},
+            {name:'Team Fortrest 2',value:tf2Data},
+            {name:'Counter Strike Go',value:csgoData},
+            {name:"Dota 2 ",value:dotaData})
     .setTimestamp();
     message.channel.send({ embeds: [exampleEmbed] });
 }
@@ -118,7 +128,7 @@ function rndnum(lower, upper) {
     return (Math.floor(Math.random() * (upper - lower + 1)) + lower).toString();
 }
 
-function coinFlip() {
+function coinFlip() { 
     let number = Math.floor(Math.random() * 2);
     if (number == 0) {
         return "talis";
@@ -127,12 +137,6 @@ function coinFlip() {
     }
 
 }
-
-
-
-
-
-
 // client.on("message",(message)=>{
 //     console.log (`[${message.author.tag}]:  ${message.content}`);
 
