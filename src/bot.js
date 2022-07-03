@@ -1,5 +1,5 @@
 require('dotenv').config({
-    path: 'D:/Code/discordBot/.env'
+    path: 'C:/Users/Aviel lagrev/Desktop/aviel/study/code/discordBotsteam/.env'
 }) //.env file 
 const appid = require("appid");
 const express = require('express');
@@ -43,6 +43,8 @@ client.on("message",  (message) => {
             .trim()
             .substring(PREFIX.length)
             .split(/\s+/);
+            
+    console.log(args.length )
         switch (msg_cmd) {
             case "flip":
                 message.reply(coinFlip())
@@ -76,22 +78,32 @@ client.on("message",  (message) => {
     }
 })
 async function specificGame(message){
-    const steamUrl = "http://api.steampowered.com/ISteamApps/GetAppList/v0002/"
+    const steamUrl = "https://api.steampowered.com/ISteamApps/GetAppList/v0002/"
     const [msg_cmd, ...args] = message.content
     .trim()
     .substring(PREFIX.length)
     .split(/\s+/);  
-    let data = await axios.get(steamUrl);
-    data = JSON.stringify(data);
-    let gameName 
-    let gameid
-    if(args[0].isNaN){
-        gameid = data.applist.apps.filter(a => a.appid === args[0])[0]
-    }
-    console.log(gameid)
-    
-    
+    const response = await axios.get(steamUrl);
+
+      if(isNaN(args[0])){ 
+        let words =capitalWords(args)
+        data = JSON.stringify(response.data.applist.apps.filter(a => a.name ==words));
+      }
+      else{
+        data = JSON.stringify(response.data.applist.apps.filter(a => a.appid ==args[0]));
+      }
+        
+      message.reply(data);    
 }
+function capitalWords(String){
+    var word=''
+    for(let i=0;i<String.length;i++){
+        word += String[i][0].toUpperCase() + String[i].substr(1)+" ";
+    }
+     
+    return word.slice(0, -1);
+    r
+} 
 async function steamStatus(message){
 const dotaUrl ='https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=KEY&format=json&appid=570'
 const dotaResponse = await axios.get(dotaUrl);
